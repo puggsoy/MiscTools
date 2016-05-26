@@ -1,0 +1,5 @@
+-main Main
+-neko "obj\BFTMTool.n"
+-cp "src\"
+-lib openfl
+-lib format

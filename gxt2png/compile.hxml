@@ -1,0 +1,7 @@
+-main Main
+-neko "obj\gxt2png.n"
+-cp "src\"
+-lib easyConsole
+-lib openfl
+-lib lime
+-lib format

@@ -1,0 +1,5 @@
+-main Main
+-neko "obj\cashdconv.n"
+-cp "src\"
+-lib easyConsole
+-lib format

@@ -1,0 +1,5 @@
+-main Main
+-neko "obj\toysolconv.n"
+-cp "src\"
+-lib easyConsole
+-lib format

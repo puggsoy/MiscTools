@@ -1,0 +1,5 @@
+-main Main
+-neko "obj\icp2png.n"
+-cp "src\"
+-lib easyConsole
+-lib format

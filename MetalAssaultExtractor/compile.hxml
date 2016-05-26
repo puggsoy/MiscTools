@@ -1,0 +1,4 @@
+-main Main
+-neko "obj\MetalAssaultExtractor.n"
+-cp "src\"
+-lib easyConsole

@@ -1,0 +1,5 @@
+-main Main
+-cpp cobj
+-cp src
+-lib easyConsole
+-lib format

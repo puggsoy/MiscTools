@@ -1,0 +1,6 @@
+-main Main
+-neko "obj\FLBExt.n"
+-cp "src\"
+-lib easyconsole
+-lib systools
+-lib format
