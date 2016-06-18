@@ -22,12 +22,13 @@ import sys.io.FileSeek;
 
 class Main 
 {
+	private var inFile:String;
 	private var noAlpha:Bool = false;
 	
 	public function new()
 	{
 		Begin.init();
-		Begin.usage = 'Usage: ${Path.withoutExtension(Path.withoutDirectory(Sys.executablePath()))} inFile [-a]\n    inFile: The .uni file to extract\n    [-a]: Optional alpha flag, include to DISABLE alpha\n';
+		Begin.usage = 'Usage: ${Path.withoutExtension(Path.withoutDirectory(Sys.executablePath()))} inFile\n    inFile: The .uni file to extract';//\n    [ -a]: Optional alpha flag, include to DISABLE alpha\n';
 		Begin.functions = [null, loadFile];
 		Begin.parseArgs();
 	}
@@ -40,7 +41,9 @@ class Main
 			End.terminate(1);
 		}
 		
-		if (Begin.args.length > 1) noAlpha = Begin.args[1] == '-a';
+		inFile = Path.withoutDirectory(Begin.args[0]);
+		
+		if (Begin.args.length > 1) noAlpha = (Begin.args[1] == '-a');
 		
 		var f:FileInput = File.read(Begin.args[0]);
 		
@@ -55,7 +58,8 @@ class Main
 				f.seek(0xA000, FileSeek.SeekBegin);
 				compressed(f, true);
 			case 0x1F8B0808: compressed(f, false);
-			default: uncompressedDot(f);
+			case 0x554E4932: uncompressedUNI(f);
+			default: uncompressed(f);
 		}
 		
 		End.anyKeyExit(0, "Done!");
@@ -89,7 +93,7 @@ class Main
 		}
 	}
 	
-	private function uncompressedDot(f:FileInput)
+	private function uncompressed(f:FileInput)
 	{
 		var groupNum:Int = 0;
 		
@@ -115,16 +119,47 @@ class Main
 		}
 	}
 	
-	private function convertART2(bi:BytesInput, name:String)
+	private function uncompressedUNI(f:FileInput)
+	{
+		f.bigEndian = false;
+		f.seek(8, FileSeek.SeekBegin);
+		var imgNum:Int = f.readInt32();
+		f.seek(0x10, FileSeek.SeekBegin);
+		var baseChunkOff:Int = f.readInt32();
+		
+		var chunk:Int = 0x800;
+		f.seek(chunk, FileSeek.SeekBegin);
+		
+		for (i in 0...imgNum)
+		{
+			f.readInt32();//file number
+			var chunkOff:Int = f.readInt32();
+			f.readInt32();//number of chunks for this file
+			var size:Int = f.readInt32();
+			
+			var tmp:Int = f.tell();
+			var offset:Int = (chunkOff + baseChunkOff) * chunk;
+			f.seek(offset, FileSeek.SeekBegin);
+			
+			var bi:BytesInput = new BytesInput(f.read(size));
+			convertART2(bi, inFile);
+			
+			f.seek(tmp, FileSeek.SeekBegin);
+		}
+	}
+	
+	private function convertART2(bi:BytesInput, fName:String)
 	{
 		bi.bigEndian = false;
 		
-		if (bi.readString(4) != 'ART2') End.anyKeyExit(1, '**bad art2 header**');
-		if (bi.readInt32() != 8) trace('not 8 in $name');
+		var magic:String = bi.readString(4);
+		if (magic != 'ART2') End.anyKeyExit(1, '**bad art2 header** - should be "ART2" not "$magic"');
+		if (bi.readInt32() != 8) trace('not 8 in $fName');
 		
 		var width:Int = bi.readInt32();
 		var height:Int = bi.readInt32();
 		var len:Int = width * height;
+		var name:String = bi.readString(0x0F).split(String.fromCharCode(0))[0];
 		
 		bi.position = 0x20 + len;
 		
@@ -164,8 +199,6 @@ class Main
 			else oldPos += 8;
 		}
 		
-		//trace(palette);
-		
 		bi.position = 0x20;
 		
 		var bo:BytesOutput = new BytesOutput();
@@ -173,7 +206,7 @@ class Main
 		
 		for (i in 0...len) bo.writeInt32(palette[bi.readByte()]);
 		
-		var outDir:String = '${Path.withoutDirectory(Path.withoutExtension(Begin.args[0]))}';
+		var outDir:String = '${Path.withoutExtension(inFile)}';
 		
 		FileSystem.createDirectory(outDir);
 		
@@ -248,7 +281,7 @@ class Main
 		
 		imgNum++;
 		
-		var outDir:String = '${Path.withoutDirectory(Path.withoutExtension(Begin.args[0]))}/$groupName';
+		var outDir:String = '${Path.withoutExtension(inFile)}/$groupName';
 		
 		FileSystem.createDirectory(outDir);
 		
