@@ -237,7 +237,7 @@ class Main
 				}
 				if (part.rotate != 0)
 				{
-					crop = rotate(crop, part.rotate);
+					crop = rotate(crop, -part.rotate);
 				}
 				if (part.flipX)
 				{
@@ -381,7 +381,6 @@ class Main
 	
 	private function rotate(img:BitmapData, degrees:Int):BitmapData
 	{
-		//return img;
 		var newImg:BitmapData = new BitmapData(img.width, img.height, true, 0);
 		
 		var rads:Float = degrees / 180 * Math.PI;
