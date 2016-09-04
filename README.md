@@ -39,6 +39,9 @@ Extractor for the .flb files in the iOS version of Final Fantasy VI. More info: 
 ###gxt2png
 Converts .gxt files from Patapon 1 and 2 to PNG. More info: http://zenhax.com/viewtopic.php?t=647
 
+###hip2png
+Converts .hip files, specifically for Persona 4 Arena Ultimax (although it may work with others). More info: http://www.vg-resource.com/thread-27359.html
+
 ###icp2png
 Converts .icp files from the iOS version of Final Fantasy 5. These are extracted from the .bin files using the script here: http://zenhax.com/viewtopic.php?t=730 More info: http://www.vg-resource.com/thread-26815.html
 
