@@ -30,6 +30,9 @@ Merges two .dsp files into a single stereo WAV file, using one as each channel. 
 ###CosmicBugExt
 Extracts .dat files from Cosmic Bug using .bbk files. More info: http://www.vg-resource.com/thread-28860.html
 
+###DBFCTool
+Reads in and colours .dds.gz files from Dengeki Bunko: Fighting Climax Ignition using .cg files. Planning to add reconstruction of the sprites. More info: https://www.vg-resource.com/thread-29860.html (Thread includes script to extract .pac files)
+
 ###FFBETool
 A tool to organise spritesheets from Final Fantasy: Brave Exvius using its .csv files. More info: http://www.vg-resource.com/thread-27841.html
 
@@ -45,6 +48,9 @@ Converts .hip files, specifically for Persona 4 Arena Ultimax (although it may w
 ###icp2png
 Converts .icp files from the iOS version of Final Fantasy 5. These are extracted from the .bin files using the script here: http://zenhax.com/viewtopic.php?t=730 More info: http://www.vg-resource.com/thread-26815.html
 
+###LLPalTool
+Helper tool to colour sprites from Lethal League. Only used privately (lots of hard coded stuff), but sharing the code for those interested.
+
 ###MetalAssaultExtractor
 Extracts mas.cvf from Metal Assault. More info: http://www.vg-resource.com/thread-26525.html
 
@@ -57,8 +63,11 @@ Converts .tmx files (or .bins containing them) from Persona 4 Golden to PNG. Mor
 ###PKTool
 Extracts .pk1 files from Super Robot Taisen OG Saga - Endless Frontier. More info: http://www.vg-resource.com/thread-15341-post-530462.html#pid530462
 
+###SDDtoDDS
+Made to convert .DDS_ files from Folklore to regular DDS. Basically just reverses a bunch of header fields, nothing too fancy. More info: https://www.vg-resource.com/thread-29910.html
+
 ###TextureUnPacker
-Unpacks spritesheets made by TexturePacker using XMLs.
+Unpacks spritesheets made by TexturePacker using XMLs. Specifically used for Out There Somewhere.
 
 ###toysolconv
 Converts .tgab and .pngb files from Toy Soldiers to PNG. Also converts from PNG to .tgab or .pngb. More info: http://zenhax.com/viewtopic.php?t=667
