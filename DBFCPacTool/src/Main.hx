@@ -26,7 +26,7 @@ class Main
 	public function new() 
 	{
 		Begin.init();
-		Begin.usage = "Usage: DBFCTool inFile outDir\n    inFile: The .pac file to extract. Can alternatively be a folder of .pac files\n    outDir: The folder to save the converted files to";
+		Begin.usage = "Usage: DBFCPacTool inFile outDir\n    inFile: The .pac file to extract. Can alternatively be a folder of .pac files\n    outDir: The folder to save the converted files to";
 		Begin.functions = [null, null, checkArgs];
 		Begin.parseArgs();
 	}
