@@ -105,6 +105,8 @@ class Main
 				case 'cg':
 					func = function(b){ imgConstructs = readCG(b); }
 				case 'pal':
+					if (name.indexOf('_p') != -1) continue;
+					
 					func = function(b){ pal = readPAL(b); }
 				case 'uka':
 					func = function(b){ images = readCgarcUKA(b); }
