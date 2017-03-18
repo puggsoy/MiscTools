@@ -23,12 +23,13 @@ import sys.io.FileSeek;
 
 class Main 
 {
+	private var greyScale:Bool = false;
 	private var palnum:Int = 0;
 	
 	public function new() 
 	{
 		Begin.init();
-		Begin.usage = "Usage: DBFCPacTool inFile outDir [-p num]\n    inFile: The .pac file to extract. Can alternatively be a folder of .pac files\n    outDir: The folder to save the converted files to\n    -p: Use this flag to select a palette number.";
+		Begin.usage = "Usage: DBFCPacTool inFile outDir [-p num] [-g]\n    inFile: The .pac file to extract. Can alternatively be a folder of .pac files\n    outDir: The folder to save the converted files to\n    -p: Use this flag to select a palette number\n    -g: Use this flag to not use a palette (producing a greyscale image)";
 		Begin.functions = [null, null, checkArgs];
 		Begin.parseArgs();
 	}
@@ -79,12 +80,14 @@ class Main
 		
 		for (i in 0...options.length)
 		{
+			if (options[i] == '-g')
+				greyScale = true;
+			
 			if (options[i] == '-p')
 			{
 				if (options.length > i + 1)
 				{
 					palnum = Std.parseInt(options[i + 1]);
-					break;
 				}
 			}
 		}
@@ -126,6 +129,11 @@ class Main
 				case 'cg':
 					func = function(b){ imgConstructs = readCG(b); }
 				case 'pal':
+					if (greyScale)
+					{
+						continue;
+					}
+					else
 					if (palnum < 1)
 					{
 						if (name.indexOf('_p') != -1) continue;
@@ -134,8 +142,6 @@ class Main
 					{
 						if (name.indexOf('_p' + palnum + '.pal') == -1) continue;
 					}
-					
-					trace(name);
 					
 					
 					func = function(b){ pal = readPAL(b); }
@@ -154,7 +160,7 @@ class Main
 		}
 		
 		if (imgConstructs == null) End.terminate(1, 'No .cg!');
-		if (pal == null) End.terminate(1, 'No .pal!');
+		if (!greyScale && pal == null) End.terminate(1, 'No .pal!');
 		if (images == null) End.terminate(1, 'No .uka!');
 		
 		for (c in imgConstructs)
@@ -291,7 +297,7 @@ class Main
 		return ret;
 	}
 	
-	private function readDDS(bytes:Bytes, pal:Vector<Int>):BitmapData
+	private function readDDS(bytes:Bytes, ?pal:Vector<Int>):BitmapData
 	{
 		var inBytes:BytesInput = new BytesInput(bytes);
 		inBytes.position = 0x0C;
@@ -304,18 +310,26 @@ class Main
 		
 		inBytes.position = 0x80;
 		
-		for (i in 0...pixNum)
+		if (pal == null)
 		{
-			outBytes.writeInt32(pal[inBytes.readByte()]);
+			for (i in 0...pixNum)
+			{
+				var b:UInt = inBytes.readByte();
+				var col:UInt = (0xFF << 24) + (b << 16) + (b << 8) + b;
+				outBytes.writeInt32(col);
+			}
+		}
+		else
+		{
+			for (i in 0...pixNum)
+			{
+				outBytes.writeInt32(pal[inBytes.readByte()]);
+			}
 		}
 		
 		var bmp:BitmapData = new BitmapData(width, height, true, 0);
 		bmp.setPixels(bmp.rect, ByteArray.fromBytes(outBytes.getBytes()));
 		
-		//var fname:String = Path.withoutExtension(Path.withoutExtension(Path.withoutDirectory(path)));
-		//var outPath:String = Path.join([outDir, '$fname.png']);
-		
-		//savePNG(outPath, outBytes.getBytes(), width, height);
 		return bmp;
 	}
 	
