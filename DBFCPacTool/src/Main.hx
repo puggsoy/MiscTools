@@ -23,10 +23,12 @@ import sys.io.FileSeek;
 
 class Main 
 {
+	private var palnum:Int = 0;
+	
 	public function new() 
 	{
 		Begin.init();
-		Begin.usage = "Usage: DBFCPacTool inFile outDir\n    inFile: The .pac file to extract. Can alternatively be a folder of .pac files\n    outDir: The folder to save the converted files to";
+		Begin.usage = "Usage: DBFCPacTool inFile outDir [-p num]\n    inFile: The .pac file to extract. Can alternatively be a folder of .pac files\n    outDir: The folder to save the converted files to\n    -p: Use this flag to select a palette number.";
 		Begin.functions = [null, null, checkArgs];
 		Begin.parseArgs();
 	}
@@ -49,6 +51,8 @@ class Main
 		
 		outDir = Path.addTrailingSlash(outDir);
 		
+		if (Begin.args.length > 2) checkOptions();
+		
 		if (FileSystem.isDirectory(inFile)) 
 		{
 			var files:Array<String> = FileSystem.readDirectory(inFile);
@@ -67,6 +71,23 @@ class Main
 		}
 		
 		End.terminate(0, "Done");
+	}
+	
+	private function checkOptions()
+	{
+		var options:Array<String> = Begin.args.slice(2);
+		
+		for (i in 0...options.length)
+		{
+			if (options[i] == '-p')
+			{
+				if (options.length > i + 1)
+				{
+					palnum = Std.parseInt(options[i + 1]);
+					break;
+				}
+			}
+		}
 	}
 	
 	private function readPAC(path:String, outDir:String)
@@ -105,7 +126,17 @@ class Main
 				case 'cg':
 					func = function(b){ imgConstructs = readCG(b); }
 				case 'pal':
-					if (name.indexOf('_p') != -1) continue;
+					if (palnum < 1)
+					{
+						if (name.indexOf('_p') != -1) continue;
+					}
+					else
+					{
+						if (name.indexOf('_p' + palnum + '.pal') == -1) continue;
+					}
+					
+					trace(name);
+					
 					
 					func = function(b){ pal = readPAL(b); }
 				case 'uka':
@@ -304,7 +335,7 @@ class Main
 	{
 		Sys.println('Saving $path...');
 		
-		if(Path.directory(path) != '') FileSystem.createDirectory(Path.directory(path));
+		if (Path.directory(path) != '') FileSystem.createDirectory(Path.directory(path));
 		
 		var dat:Data = Tools.build32ARGB(bmp.width, bmp.height, Bytes.ofData(bmp.getPixels(bmp.rect)));
 		var o:FileOutput = File.write(path);
