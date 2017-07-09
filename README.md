@@ -27,6 +27,9 @@ Converter for .csr and .col files from Castlevania: Harmony of Despair. More inf
 ### ChannelMerge
 Merges two .dsp files into a single stereo WAV file, using one as each channel. Made to merge the files in Metal Gear Solid: The Twin Snakes. More info: http://www.vg-resource.com/thread-24613.html
 
+### chrext
+Extracts images from Kung Fu Do Fighting's .chr files. More info: https://www.vg-resource.com/thread-31300.html
+
 ### CosmicBugExt
 Extracts .dat files from Cosmic Bug using .bbk files. More info: http://www.vg-resource.com/thread-28860.html
 
