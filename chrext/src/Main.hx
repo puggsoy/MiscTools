@@ -2,16 +2,10 @@ package;
 
 import easyconsole.Begin;
 import easyconsole.End;
-import haxe.io.Bytes;
-import haxe.io.BytesInput;
 import haxe.io.Path;
 import lime.graphics.Image;
-import lime.graphics.ImageType;
-import lime.graphics.format.PNG;
 import lime.math.Rectangle;
 import lime.math.Vector2;
-import neko.Lib;
-import neko.vm.Ui;
 import sys.FileSystem;
 import sys.io.File;
 import sys.io.FileInput;
@@ -31,7 +25,7 @@ class Main
 	/**
 	 * Checks the give arguments and parses them
 	 */
-	private function checkArgs()
+	private function checkArgs():Void
 	{
 		var inFile:String = Begin.args[0];
 		var outDir:String = Begin.args[1];
@@ -57,7 +51,7 @@ class Main
 		}
 		else
 		{
-			extractCHR(inFile, outDir);
+			extractCHR(inFile, Path.join([outDir, new Path(inFile).file]));
 		}
 		
 		End.anyKeyExit(0, 'Done');
@@ -68,19 +62,25 @@ class Main
 	 * @param	inFile	Input file paths
 	 * @param	outDir	Output directory for subfolders
 	 */
-	private function extractCHR(inFile:String, outDir:String)
+	private function extractCHR(inFile:String, outDir:String):Void
 	{
 		Sys.println('Extracting $inFile');
 		
 		var f:FileInput = File.read(inFile);
 		f.bigEndian = false;
+		var valShorts:Bool = true; //frame values are shorts or bytes
 		
 		//Checking magic ID
-		if (f.readString(2) != 'V2') End.terminate(3, 'Invalid magic ID!');
+		if (f.readString(2) != 'V2')
+		{
+			Sys.println("No magic ID?");
+			f.seek( -2, FileSeek.SeekCur);
+			valShorts = false;
+		}
 		
 		var frameOff:UInt = f.readUInt16(); //frame info offset
 		var unkOff:UInt = f.readUInt16(); //offset for the stuff after frames (alignment/animations?)
-		var pngOff:UInt = f.readUInt16(); //png offset
+		var pngOff:UInt = f.readInt32(); //png offset
 		
 		//Read in the PNG
 		f.seek(pngOff, FileSeek.SeekBegin);
@@ -94,10 +94,10 @@ class Main
 		var count:Int = 1;
 		for (i in 0...len)
 		{
-			var x:UInt = f.readUInt16();
-			var y:UInt = f.readUInt16();
-			var w:UInt = f.readUInt16();
-			var h:UInt = f.readUInt16();
+			var x:UInt = valShorts ? f.readUInt16() : f.readByte();
+			var y:UInt = valShorts ? f.readUInt16() : f.readByte();
+			var w:UInt = valShorts ? f.readUInt16() : f.readByte();
+			var h:UInt = valShorts ? f.readUInt16() : f.readByte();
 			
 			if (w == 0 || h == 0) continue;
 			
@@ -111,7 +111,7 @@ class Main
 		f.close();
 	}
 	
-	private function savePNG(fname:String, outDir:String, img:Image)
+	private function savePNG(fname:String, outDir:String, img:Image):Void
 	{
 		FileSystem.createDirectory(outDir);
 		var outPath:String = Path.join([outDir, fname + ".png"]);
@@ -123,7 +123,7 @@ class Main
 		w.close();
 	}
 	
-	static function main() 
+	static function main():Void
 	{
 		new Main();
 	}
