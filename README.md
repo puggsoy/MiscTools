@@ -52,7 +52,7 @@ Converts .hip files. Works for Persona 4 Arena Ultimax and Arcana Heart 3 Love M
 Converts .icp files from the iOS version of Final Fantasy 5. These are extracted from the .bin files using the script here: http://zenhax.com/viewtopic.php?t=730 More info: http://www.vg-resource.com/thread-26815.html
 
 ### LLPalTool
-Helper tool to colour sprites from Lethal League. Only used privately (lots of hard coded stuff), but sharing the code for those interested.
+Helper tool to colour sprites from Lethal League. Mostly for private use right now (lots of hard coded stuff), but sharing the code for those interested.
 
 ### MetalAssaultExtractor
 Extracts mas.cvf from Metal Assault. More info: http://www.vg-resource.com/thread-26525.html
