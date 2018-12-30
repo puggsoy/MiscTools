@@ -1,59 +1,182 @@
 package;
+import haxe.ds.Vector;
+import haxe.io.Bytes;
+import haxe.io.BytesOutput;
 import sys.io.FileInput;
+import sys.io.FileSeek;
 
 class HIP
 {
+	// Header
+	private var magic:String;
+	private var unk1:Int;
+	private var fileLen:Int;
+	private var unk2:Int;
+	private var width:Int;
+	private var height:Int;
+	private var flags:Int;
+	private var header2Len:Int;
+	
+	// Header2
+	private var width2:Int;
+	private var height2:Int;
+	private var offset_x:Int;
+	private var offset_y:Int;
+	private var unk5:Int;
+	private var unk6:Int;
+	private var unk7:Int;
+	private var unk8:Int;
+	
+	// Data
+	private var data:Bytes;
+	
+	// Internal palette
+	public var internalPal(default, null):Vector<Int>;
+	
 	public function new(f:FileInput)
 	{
-		f.bigEndian = true;
+		f.bigEndian = false;
+		f.seek(0, FileSeek.SeekEnd);
+		var realFileSize:Int = f.tell();
+		f.seek(0, FileSeek.SeekBegin);
 		
-		var hdr:Header = {magic: '', unk1: 0, fileLen: 0, unk2: 0, width: 0, height: 0, flags: 0, unk3: 0};
-		hdr.magic = f.readString(4);
-		hdr.unk1 = f.readInt32();
-		hdr.fileLen = f.readInt32();
-		hdr.unk2 = f.readInt32();
-		hdr.width = f.readInt32();
-		hdr.height = f.readInt32();
-		hdr.flags = f.readInt32();
-		hdr.unk3 = f.readInt32();
+		magic = f.readString(4);
 		
+		if (magic != "HIP" + String.fromCharCode(0))
+		{
+			throw "Invalid HIP magic!";
+		}
 		
+		unk1 = f.readInt32();
+		fileLen = f.readInt32();
+		
+		if (fileLen != realFileSize)
+		{
+			// If the filesize is wrong, we may have the wrong endian
+			f.bigEndian = true;
+			f.seek( -8, FileSeek.SeekCur);
+			
+			unk1 = f.readInt32();
+			fileLen = f.readInt32();
+			
+			if (fileLen != realFileSize)
+			{
+				throw "Invalid file size!";
+			}
+		}
+		
+		// Checks are over
+		unk2 = f.readInt32();
+		width = f.readInt32();
+		height = f.readInt32();
+		flags = f.readInt32();
+		header2Len = f.readInt32();
+		
+		if (header2Len > 0)
+		{
+			width2 = f.readInt32();
+			height2 = f.readInt32();
+			offset_x = f.readInt32();
+			offset_y = f.readInt32();
+			unk5 = f.readInt32();
+			unk6 = f.readInt32();
+			unk7 = f.readInt32();
+			unk8 = f.readInt32();
+		}
+		
+		internalPal = getInternalPalette(f);
+		
+		//f.seek(0x400, FileSeek.SeekCur); // Skip the internal palette
+		
+		var bpp:Int = 1;
+		var bpc:Int = 4;
+		
+		var compLen:Int = fileLen - f.tell();
+		var decompLen:Int = width * height * bpp;
+		
+		data = Bytes.alloc(decompLen);
+		var pos:Int = 0;
+		
+		// We assume this is 8bit RLE for now
+		for (i in 0...Std.int(compLen / 2)) // divided by 2 since each instruction is made of 2 bytes
+		{
+			var pixel:Int = f.readByte();
+			var repeat:Int = f.readByte();
+			
+			for (j in 0...repeat)
+			{
+				data.set(pos++, pixel);
+			}
+		}
+	}
+	
+	private function getInternalPalette(f:FileInput):Vector<Int>
+	{
+		var palette:Vector<Int> = new Vector<Int>(0x100);
+		
+		for (i in 0...palette.length)
+		{
+			var argb:Int = f.readInt32();
+			palette[i] = argb;
+		}
+		
+		return palette;
+	}
+	
+	public function getOutput(pal:Vector<Int>):BytesOutput
+	{
+		var out:BytesOutput = new BytesOutput();
+		out.bigEndian = true;
+		
+		var pos:Int = 0;
+		while (pos < data.length)
+		{
+			try
+			{
+				out.writeInt32(pal[data.get(pos)]);
+			}
+			catch (e:String)
+			{
+				trace(e);
+				trace(StringTools.hex(pos));
+			}
+			
+			pos++;
+		}
+		
+		return out;
+	}
+	
+	public function getWidth():Int
+	{
+		if (width2 != null)
+		{
+			return width2;
+		}
+		
+		return width;
+	}
+	
+	public function getHeight():Int
+	{
+		if (height2 != null)
+		{
+			return height2;
+		}
+		
+		return height;
 	}
 }
 
-private typedef Header =
-{
-	var magic:String;
-	var unk1:Int;
-	var fileLen:Int;
-	var unk2:Int;
-	var width:Int;
-	var height:Int;
-	var flags:Int;
-	var unk3:Int;
-}
-
-private typedef Header2 = 
-{
-	var width:Int;
-	var height:Int;
-	var offset_x:Int;
-	var offset_y:Int;
-	var unk5:Int;
-	var unk6:Int;
-	var unk7:Int;
-	var unk8:Int;
-}
-
 @:enum
-private abstract HeaderType
+private abstract HeaderType(Int)
 {
 	var Type1 = 0x0000;
 	var Type2 = 0x2001;
 }
 
 @:enum
-private abstract CompressionType
+private abstract CompressionType(Int)
 {
 	var Bit8 = 0x0001;
 	var Bit8RLE = 0x2001;
