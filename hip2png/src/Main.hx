@@ -29,7 +29,7 @@ class Main
 	public function new() 
 	{
 		Begin.init();
-		Begin.usage = "Usage: hip2png inDir outDir [-p]\n    inDir: A folder containing the .hip files to convert\n    palDir: A folder containing the .pal files to use\n    outDir: The folder to save the converted files to";
+		Begin.usage = "Usage: hip2png inDir outDir [-p]\n    inDir: A folder containing the .hip files to convert\n    palDir: A folder containing the .hpl files to use\n    outDir: The folder to save the converted files to";
 		Begin.functions = [null, null, null, checkArgs];
 		Begin.parseArgs();
 	}
