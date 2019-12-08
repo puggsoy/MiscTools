@@ -1,0 +1,6 @@
+-cp src
+-D analyzer-optimize
+-lib easyconsole
+-lib format
+-neko n/hip2png.n
+-main Main

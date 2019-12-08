@@ -1,5 +1,6 @@
 package ;
 
+import haxe.macro.Expr.Catch;
 import easyconsole.Begin;
 import easyconsole.End;
 import format.png.Data;
@@ -9,7 +10,6 @@ import haxe.ds.Vector;
 import haxe.io.Bytes;
 import haxe.io.BytesOutput;
 import haxe.io.Path;
-import neko.Lib;
 import sys.FileSystem;
 import sys.io.File;
 import sys.io.FileInput;
@@ -18,19 +18,18 @@ import sys.io.FileSeek;
 
 class Main 
 {
-	private var f:FileInput;
 	private var inDir:String;
 	private var palDir:String;
 	private var outDir:String;
 	private var palf:FileInput;
-	private var palettes:Array<Vector<Int>>;
-	private var paletteNames:Array<String>;
+	private var hpls:Array<HPL>;
 	
 	public function new() 
 	{
 		Begin.init();
-		Begin.usage = "Usage: hip2png inDir outDir [-p]\n    inDir: A folder containing the .hip files to convert\n    palDir: A folder containing the .hpl files to use\n    outDir: The folder to save the converted files to";
+		Begin.usage = "Usage: hip2png inDir outDir\n    inDir: A folder containing the .hip files to convert\n    palDir: A folder containing the .hpl files to use\n    outDir: The folder to save the converted files to";
 		Begin.functions = [null, null, null, checkArgs];
+		
 		Begin.parseArgs();
 	}
 	
@@ -39,7 +38,11 @@ class Main
 		
 		inDir = Begin.args[0];
 		
-		if (FileSystem.exists(inDir) && !FileSystem.isDirectory(inDir))
+		if (!FileSystem.exists(inDir))
+		{
+			End.terminate(1, "inDir must exist!");
+		}
+		else if (!FileSystem.isDirectory(inDir))
 		{
 			End.terminate(1, "inDir must be a directory!");
 		}
@@ -48,7 +51,11 @@ class Main
 		
 		palDir = Begin.args[1];
 		
-		if (FileSystem.exists(inDir) && !FileSystem.isDirectory(inDir))
+		if (!FileSystem.exists(palDir))
+		{
+			End.terminate(1, "palDir must exist!");
+		}
+		else if (!FileSystem.isDirectory(inDir))
 		{
 			End.terminate(1, "palDir must be a directory!");
 		}
@@ -59,15 +66,14 @@ class Main
 		outDir = Path.addTrailingSlash(outDir);
 		
 		var palFiles:Array<String> = FileSystem.readDirectory(palDir);
-		palettes = new Array<Vector<Int>>();
-		paletteNames = new Array<String>();
+		hpls = new Array<HPL>();
 		
 		for (file in palFiles)
 		{
 			if (Path.extension(file) == "hpl")
 			{
-				palettes.push(loadPalette(Path.join([palDir, file])));
-				paletteNames.push(Path.withoutExtension(file));
+				var path:String = Path.join([palDir, file]);
+				hpls.push(loadPalette(path));
 			}
 		}
 		
@@ -84,7 +90,7 @@ class Main
 		End.terminate(0, "Done");
 	}
 	
-	private function loadPalette(filePath:String):Vector<Int>
+	private function loadPalette(filePath:String):HPL
 	{
 		if (filePath == null)
 		{
@@ -92,29 +98,26 @@ class Main
 		}
 		
 		Sys.println('Loading palette $filePath');
+
+		var name = Path.withoutExtension(Path.withoutDirectory(filePath));
 		
-		var palf:FileInput = File.read(filePath);
-		palf.bigEndian = true;
+		var f:FileInput = File.read(filePath);
 		
-		if (palf.readString(4) != "HPAL")
+		var hpl:HPL = null;
+
+		try
 		{
-			palf.close();
-			End.terminate(2, "Invalid HPL file!");
+			hpl = new HPL(f, name);
 		}
-		
-		palf.seek(0x20, FileSeek.SeekBegin);
-		
-		var palette:Vector<Int> = new Vector<Int>(0x100);
-		
-		for (i in 0...palette.length)
+		catch (e:String)
 		{
-			var argb:Int = palf.readInt32();
-			palette[i] = argb;
+			f.close();
+			End.terminate(3, e);
 		}
+
+		f.close();
 		
-		palf.close();
-		
-		return palette;
+		return hpl;
 	}
 	
 	private function convertHIP(path:String)
@@ -122,7 +125,7 @@ class Main
 		Sys.println('Converting $path');
 		
 		// Load HIP
-		f = File.read(path);
+		var f:FileInput = File.read(path);
 		
 		var hip:HIP = null;
 		
@@ -138,14 +141,14 @@ class Main
 		
 		f.close();
 		
-		for (i in 0...(palettes.length + 1))
+		for (i in 0...(hpls.length + 1))
 		{
 			var folderName:String = "";
 			
 			if (i == 0)
 				folderName = "internal";
 			else
-				folderName = paletteNames[i - 1];
+				folderName = hpls[i - 1].name;
 			
 			var finalOutDir:String = Path.join([outDir, folderName]);
 			FileSystem.createDirectory(finalOutDir);
@@ -157,7 +160,7 @@ class Main
 			if (i == 0)
 				out = hip.getOutput(hip.internalPal);
 			else
-				out = hip.getOutput(palettes[i - 1]);
+				out = hip.getOutput(hpls[i - 1].paletteData);
 			
 			savePNG(out.getBytes(), hip.getWidth(), hip.getHeight(), outPath);
 		}

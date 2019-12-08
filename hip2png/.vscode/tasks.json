@@ -1,0 +1,22 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build",
+			"type": "haxe",
+			"args": "active configuration",
+			"group": "build"
+		},
+		{
+			"label": "Test",
+			"type": "shell",
+			"command": "Run.bat",
+			"dependsOrder": "sequence",
+			"dependsOn": ["Build"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		}
+	]
+}

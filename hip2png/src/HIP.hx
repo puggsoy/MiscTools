@@ -8,27 +8,27 @@ import sys.io.FileSeek;
 class HIP
 {
 	// Header
-	private var magic:String;
-	private var unk1:Int;
-	private var fileLen:Int;
-	private var unk2:Int;
-	private var width:Int;
-	private var height:Int;
-	private var flags:Int;
-	private var header2Len:Int;
+	private var magic:String = null;
+	private var unk1:Int = -1;
+	private var fileLen:Int = -1;
+	private var unk2:Int = -1;
+	private var width:Int = -1;
+	private var height:Int = -1;
+	private var flags:Int = -1;
+	private var header2Len:Int = -1;
 	
 	// Header2
-	private var width2:Int;
-	private var height2:Int;
-	private var offset_x:Int;
-	private var offset_y:Int;
-	private var unk5:Int;
-	private var unk6:Int;
-	private var unk7:Int;
-	private var unk8:Int;
+	private var width2:Int = -1;
+	private var height2:Int = -1;
+	private var offset_x:Int = -1;
+	private var offset_y:Int = -1;
+	private var unk5:Int = -1;
+	private var unk6:Int = -1;
+	private var unk7:Int = -1;
+	private var unk8:Int = -1;
 	
 	// Data
-	private var data:Bytes;
+	private var data:Bytes = null;
 	
 	// Internal palette
 	public var internalPal(default, null):Vector<Int>;
@@ -149,7 +149,7 @@ class HIP
 	
 	public function getWidth():Int
 	{
-		if (width2 != null)
+		if (width2 != -1)
 		{
 			return width2;
 		}
@@ -159,7 +159,7 @@ class HIP
 	
 	public function getHeight():Int
 	{
-		if (height2 != null)
+		if (height2 != -1)
 		{
 			return height2;
 		}
